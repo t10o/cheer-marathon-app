@@ -1,8 +1,11 @@
-import 'package:background_locator_2/background_locator.dart';
+import 'dart:async';
+import 'dart:io';
+
+import 'package:background_task/background_task.dart';
 import 'package:cheer_on_runnner_app/import.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:location/location.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/run.dart';
@@ -18,10 +21,42 @@ var baseUrl = 'https://cheer-on-runner.com/';
 
 class _HomePageState extends State<HomePage> {
   String url = '';
-  final location = Location();
+  late final StreamSubscription<Location> _bgDisposer;
+  late final StreamSubscription<StatusEvent> _statusDisposer;
 
-  void _requestLocationPermission() async {
-    await RequestLocationPermission.request(location);
+  @override
+  void initState() {
+    super.initState();
+
+    _bgDisposer = BackgroundTask.instance.stream.listen((event) {
+      final message = '${DateTime.now()}: ${event.lat}, ${event.lng}';
+      debugPrint(message);
+    });
+
+    Future(() async {
+      final result = await Permission.notification.request();
+      debugPrint('notification: $result');
+      if (Platform.isAndroid) {
+        if (result.isGranted) {
+          await BackgroundTask.instance.setAndroidNotification(
+            title: 'バックグラウンド処理',
+            message: 'バックグラウンド処理を実行中',
+          );
+        }
+      }
+    });
+
+    _statusDisposer = BackgroundTask.instance.status.listen((event) {
+      final message = 'status: ${event.status.value}, message: ${event.message}';
+      print(message);
+    });
+  }
+
+  @override
+  void dispose() {
+    _bgDisposer.cancel();
+    _statusDisposer.cancel();
+    super.dispose();
   }
 
   Future<void> _createRunRecord(String runId) async {
@@ -81,12 +116,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    initPlatformState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Home")),
@@ -105,7 +134,7 @@ class _HomePageState extends State<HomePage> {
                       url = '$baseUrl$newId';
                     });
 
-                    await _saveRunId(newId); // ローカルストレージにrunIdを保存
+                    await _saveRunId(newId);
                     await _createRunRecord(newId);
                   },
                   icon: const Icon(
@@ -146,9 +175,9 @@ class _HomePageState extends State<HomePage> {
                 ],
                 ElevatedButton.icon(
                   onPressed: () async {
-                    _requestLocationPermission();
-                    await _updateRunStartTime(); // ランニング開始時にstartTimeを更新
-                    LocationCallbackHandler.startLocationService();
+                    await requestLocationPermission();
+                    await _updateRunStartTime();
+                    await BackgroundTask.instance.start();
                   },
                   icon: const Icon(
                     Icons.play_arrow,
@@ -157,9 +186,8 @@ class _HomePageState extends State<HomePage> {
                 ),
                 ElevatedButton.icon(
                   onPressed: () async {
-                    _requestLocationPermission();
-                    await _updateRunEndTime(); // ランニング終了時にendTimeを更新
-                    BackgroundLocator.unRegisterLocationUpdate();
+                    await _updateRunEndTime();
+                    await BackgroundTask.instance.stop();
                   },
                   icon: const Icon(
                     Icons.stop,

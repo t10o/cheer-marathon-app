@@ -1,6 +1,6 @@
 import Flutter
 import UIKit
-import background_locator_2
+import background_task
 
 func registerPlugins(registry: FlutterPluginRegistry) -> () {
     if (!registry.hasPlugin("BackgroundLocatorPlugin")) {
@@ -15,7 +15,9 @@ func registerPlugins(registry: FlutterPluginRegistry) -> () {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
-    BackgroundLocatorPlugin.setPluginRegistrantCallback(registerPlugins)
+    BackgroundTaskPlugin.onRegisterDispatchEngine = {
+        GeneratedPluginRegistrant.register(with: BackgroundTaskPlugin.dispatchEngine)
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

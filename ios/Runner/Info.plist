@@ -45,7 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Used to monitor location in the background and notify to app.</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>Used to monitor location in the background and notify to app.</string>

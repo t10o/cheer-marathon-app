@@ -17,14 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
-  background_locator_2:
+  background_task:
     dependency: "direct main"
     description:
-      name: background_locator_2
-      sha256: "145ef41767306052cbb2159478c0369b83c9800740f7acc656530c263d371695"
+      name: background_task
+      sha256: ef726d409975dd6f7875bd0a92d6043e097952b20794e42cd7bd578d4e27b577
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.6"
+    version: "0.2.0"
   boolean_selector:
     dependency: transitive
     description:
