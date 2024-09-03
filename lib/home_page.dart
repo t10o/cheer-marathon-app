@@ -3,8 +3,12 @@ import 'dart:io';
 
 import 'package:background_task/background_task.dart';
 import 'package:cheer_on_runnner_app/import.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -116,6 +120,50 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _takePicture() async {
+    try {
+      final ImagePicker _picker = ImagePicker();
+      final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+
+      if (photo == null) {
+        return;
+      }
+
+      var imageUrl =
+          await FirestoreHelper.instance.uploadImageToStorage(photo.path);
+
+      final runId = await _getRunId();
+
+      if (runId != null) {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+
+        GeoPoint currentLocation =
+            GeoPoint(position.latitude, position.longitude);
+
+        final newPhoto = RunPhoto(
+          photoUrl: imageUrl,
+          location: currentLocation,
+          timestamp: DateTime.now(),
+        );
+
+        await FirestoreHelper.instance.addPhotoToRun(runId, newPhoto);
+        if (kDebugMode) {
+          print("写真がFirestoreに保存されました: $imageUrl");
+        }
+      } else {
+        if (kDebugMode) {
+          print("ランIDが取得できませんでした。");
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("写真を撮影・保存中にエラーが発生しました: $e");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -196,6 +244,17 @@ class _HomePageState extends State<HomePage> {
                   ),
                   label: const Text("ランニング終了"),
                 ),
+                ElevatedButton.icon(
+                  onPressed: url.isNotEmpty
+                      ? () async {
+                          await _takePicture();
+                        }
+                      : null,
+                  icon: const Icon(
+                    Icons.camera,
+                  ),
+                  label: const Text("写真を撮る"),
+                )
               ],
             ),
           ),

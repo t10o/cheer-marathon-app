@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/location.dart';
 import '../models/message.dart';
@@ -148,5 +152,26 @@ class FirestoreHelper {
   Future<void> deleteMessage(String messageId) async {
     final db = FirebaseFirestore.instance;
     await db.collection("messages").doc(messageId).delete();
+  }
+
+  Future<String> uploadImageToStorage(String imagePath) async {
+    try {
+      final storageRef = FirebaseStorage.instance.ref();
+      final imageRef = storageRef
+          .child('images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      final uploadTask = imageRef.putFile(File(imagePath));
+
+      await uploadTask.whenComplete(() {});
+
+      final imageUrl = await imageRef.getDownloadURL();
+
+      return imageUrl;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to upload image: $e');
+      }
+      throw Exception('Failed to upload image');
+    }
   }
 }

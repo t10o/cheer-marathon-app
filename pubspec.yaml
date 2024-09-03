@@ -41,6 +41,9 @@ dependencies:
   location: ^7.0.0
   shared_preferences: ^2.0.9
   background_task: ^0.2.0
+  firebase_storage: ^12.2.0
+  geolocator: ^10.0.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
