@@ -47,7 +47,8 @@ class _HomePageState extends State<HomePage> {
     });
 
     _statusDisposer = BackgroundTask.instance.status.listen((event) {
-      final message = 'status: ${event.status.value}, message: ${event.message}';
+      final message =
+          'status: ${event.status.value}, message: ${event.message}';
       print(message);
     });
   }
@@ -165,7 +166,8 @@ class _HomePageState extends State<HomePage> {
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: url));
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("URLをクリップボードにコピーしました")),
+                              const SnackBar(
+                                  content: Text("URLをクリップボードにコピーしました")),
                             );
                           },
                         ),

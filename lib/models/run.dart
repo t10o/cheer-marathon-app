@@ -20,18 +20,21 @@ class Run {
   });
 
   factory Run.fromFirestore(
-      DocumentSnapshot<Map<String, dynamic>> snapshot,
-      SnapshotOptions? options,
-      ) {
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    SnapshotOptions? options,
+  ) {
     final data = snapshot.data();
     return Run(
       id: data?['id'],
       startTime: (data?['startTime'] as Timestamp).toDate(),
-      endTime: data?['endTime'] != null ? (data?['endTime'] as Timestamp).toDate() : null,
+      endTime: data?['endTime'] != null
+          ? (data?['endTime'] as Timestamp).toDate()
+          : null,
       route: List<GeoPoint>.from(data?['route'] ?? []),
       photos: (data?['photos'] as List<dynamic>?)
-          ?.map((photo) => RunPhoto.fromMap(photo))
-          .toList() ?? [],
+              ?.map((photo) => RunPhoto.fromMap(photo))
+              .toList() ??
+          [],
       status: data?['status'],
       url: data?['url'],
     );
