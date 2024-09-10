@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:background_task/background_task.dart';
 import 'package:cheer_on_runnner_app/utils/firestore_helper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -113,6 +114,25 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  final messaging = FirebaseMessaging.instance;
+
+  await messaging.requestPermission(
+    alert: true, // 通知が表示されるかどうか
+    announcement: false, // アナウンスメント通知が有効かどうか
+    badge: true, // バッジ（未読件数）が更新されるかどうか
+    carPlay: false, // CarPlayで通知が表示されるかどうか
+    criticalAlert: false, // 重要な通知（サイレントではない）が有効かどうか
+    provisional: false, // 仮の通知（ユーザーによる設定を尊重）が有効かどうか
+    sound: true, // 通知にサウンドが含まれるかどうか
+  );
+
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true, // フォアグラウンドで通知が表示されるかどうか
+    badge: false, // バッジ（未読件数）が表示されるかどうか
+    sound: true, // 通知にサウンドが含まれるかどうか
+  );
+
   runApp(const MyApp());
 }
 

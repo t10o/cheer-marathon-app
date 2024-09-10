@@ -44,6 +44,8 @@ dependencies:
   firebase_storage: ^12.2.0
   geolocator: ^10.0.0
   image_picker: ^1.1.2
+  firebase_messaging: ^15.1.0
+  flutter_local_notifications: ^17.2.2
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Run {
   String id;
+  String fcmToken;
   DateTime startTime;
   DateTime? endTime;
   List<GeoPoint> route;
@@ -11,6 +12,7 @@ class Run {
 
   Run({
     required this.id,
+    required this.fcmToken,
     required this.startTime,
     this.endTime,
     required this.route,
@@ -26,6 +28,7 @@ class Run {
     final data = snapshot.data();
     return Run(
       id: data?['id'],
+      fcmToken: data?['fcmToken'],
       startTime: (data?['startTime'] as Timestamp).toDate(),
       endTime: data?['endTime'] != null
           ? (data?['endTime'] as Timestamp).toDate()
@@ -43,6 +46,7 @@ class Run {
   Map<String, dynamic> toFirestore() {
     return {
       "id": id,
+      "fcmToken": fcmToken,
       "startTime": Timestamp.fromDate(startTime),
       "endTime": endTime != null ? Timestamp.fromDate(endTime!) : null,
       "route": route,

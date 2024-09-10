@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:background_task/background_task.dart';
 import 'package:cheer_on_runnner_app/import.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,8 +26,18 @@ var baseUrl = 'https://cheer-on-runner.com/';
 
 class _HomePageState extends State<HomePage> {
   String url = '';
+  String tokenText = 'トークンはまだありません';
   late final StreamSubscription<Location> _bgDisposer;
   late final StreamSubscription<StatusEvent> _statusDisposer;
+
+  final fcm = FirebaseMessaging.instance;
+
+  Future getToken() async {
+    final token = await fcm.getToken();
+    setState(() {
+      tokenText = token!;
+    });
+  }
 
   @override
   void initState() {
@@ -38,6 +49,8 @@ class _HomePageState extends State<HomePage> {
     });
 
     Future(() async {
+      await getToken();
+
       final result = await Permission.notification.request();
       debugPrint('notification: $result');
       if (Platform.isAndroid) {
@@ -67,6 +80,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _createRunRecord(String runId) async {
     final newRun = Run(
       id: runId,
+      fcmToken: tokenText,
       startTime: DateTime.now(),
       route: [],
       photos: [],
@@ -97,6 +111,7 @@ class _HomePageState extends State<HomePage> {
       await FirestoreHelper.instance.insertRun(
         Run(
           id: runId,
+          fcmToken: tokenText,
           startTime: DateTime.now(),
           route: [],
           photos: [],
