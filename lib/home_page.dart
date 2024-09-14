@@ -123,6 +123,21 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _updateRoute() async {
+    final runId = await _getRunId();
+
+    if (runId != null) {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      GeoPoint currentLocation =
+          GeoPoint(position.latitude, position.longitude);
+
+      await FirestoreHelper.instance.addLocationToRoute(runId, currentLocation);
+    }
+  }
+
   Future<void> _updateRunEndTime() async {
     final runId = await _getRunId();
     if (runId != null) {
@@ -237,6 +252,7 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () async {
                     await requestLocationPermission();
                     await _updateRunStartTime();
+                    await _updateRoute();
                     await BackgroundTask.instance.start();
                   },
                   icon: const Icon(
