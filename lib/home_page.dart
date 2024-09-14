@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/run.dart';
@@ -164,18 +165,12 @@ class _HomePageState extends State<HomePage> {
         );
 
         await FirestoreHelper.instance.addPhotoToRun(runId, newPhoto);
-        if (kDebugMode) {
-          print("写真がFirestoreに保存されました: $imageUrl");
-        }
-      } else {
-        if (kDebugMode) {
-          print("ランIDが取得できませんでした。");
-        }
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print("写真を撮影・保存中にエラーが発生しました: $e");
-      }
+    } catch (exception, stackTrace) {
+      await Sentry.captureException(
+        exception,
+        stackTrace: stackTrace,
+      );
     }
   }
 

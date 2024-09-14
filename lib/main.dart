@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'home_page.dart';
@@ -29,9 +30,6 @@ void backgroundHandler(Location data) {
         data.lng == null ||
         data.lat == 0.0 ||
         data.lng == 0.0) {
-      if (kDebugMode) {
-        print('Invalid location data, skipping...');
-      }
       return;
     }
 
@@ -67,9 +65,6 @@ void backgroundHandler(Location data) {
           calculateDistance(prevLat, prevLng, data.lat!, data.lng!);
       lastHandlerLocation = GeoPoint(data.lat!, data.lng!);
       if (distance > 30) {
-        if (kDebugMode) {
-          print('30m以上の移動のため、位置情報をスキップします');
-        }
         return;
       }
     }
@@ -86,9 +81,6 @@ void backgroundHandler(Location data) {
       double distance =
           calculateDistance(lastLat, lastLng, data.lat!, data.lng!);
       if (distance < 10) {
-        if (kDebugMode) {
-          print('10m以内の移動のため、位置情報をスキップします');
-        }
         return;
       }
     }
@@ -96,10 +88,6 @@ void backgroundHandler(Location data) {
     // Firestoreに位置情報を保存
     if (runId != null) {
       await FirestoreHelper.instance.addLocationToRoute(runId, newLocation);
-    } else {
-      if (kDebugMode) {
-        print("runIdが設定されていません");
-      }
     }
 
     // 新しい位置情報を保存
@@ -133,7 +121,19 @@ Future<void> main() async {
     sound: true, // 通知にサウンドが含まれるかどうか
   );
 
-  runApp(const MyApp());
+  await SentryFlutter.init(
+    (options) {
+      options.dsn =
+          'https://6b494b49d23509764ca61a6cac64664d@o4507400443002880.ingest.us.sentry.io/4507929175457792';
+      // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+      // We recommend adjusting this value in production.
+      options.tracesSampleRate = 1.0;
+      // The sampling rate for profiling is relative to tracesSampleRate
+      // Setting to 1.0 will profile 100% of sampled transactions:
+      options.profilesSampleRate = 1.0;
+    },
+    appRunner: () => runApp(MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {

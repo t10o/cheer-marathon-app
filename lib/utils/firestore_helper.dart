@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 
 import '../models/location.dart';
 import '../models/message.dart';
@@ -168,10 +167,7 @@ class FirestoreHelper {
 
       return imageUrl;
     } catch (e) {
-      if (kDebugMode) {
-        print('Failed to upload image: $e');
-      }
-      throw Exception('Failed to upload image');
+      throw Exception(e);
     }
   }
 }
