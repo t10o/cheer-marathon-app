@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
@@ -96,12 +97,33 @@ void backgroundHandler(Location data) {
   });
 }
 
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'cheer',
+  'cheer',
+  description: 'receive cheer message',
+  importance: Importance.max,
+);
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("バックグラウンドでメッセージを受け取りました");
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BackgroundTask.instance.setBackgroundHandler(backgroundHandler);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
 
   final messaging = FirebaseMessaging.instance;
 
@@ -120,6 +142,23 @@ Future<void> main() async {
     badge: false, // バッジ（未読件数）が表示されるかどうか
     sound: true, // 通知にサウンドが含まれるかどうか
   );
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    print("フォアグラウンドでメッセージを受け取りました");
+    RemoteNotification? notification = message.notification;
+    AndroidNotification? android = message.notification?.android;
+    if (notification != null && android != null) {
+      flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(channel.id, channel.name,
+                channelDescription: channel.description,
+                importance: channel.importance),
+          ));
+    }
+  });
 
   await SentryFlutter.init(
     (options) {
