@@ -205,75 +205,95 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Home")),
-      body: SafeArea(
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    var uuid = const Uuid();
-                    var newId = uuid.v4();
-                    setState(() {
-                      url = '$baseUrl$newId';
-                    });
+        appBar: AppBar(title: const Text("Home")),
+        body: SafeArea(
+          child: Stack(children: [
+            Container(
+              margin: const EdgeInsets.all(16),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        var uuid = const Uuid();
+                        var newId = uuid.v4();
+                        setState(() {
+                          url = '$baseUrl$newId';
+                        });
 
-                    await _saveRunId(newId);
-                    await _createRunRecord(newId);
-                  },
-                  icon: const Icon(
-                    Icons.play_arrow,
-                  ),
-                  label: const Text("URL作成"),
-                ),
-                if (url.isNotEmpty) ...[
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 16),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
+                        await _saveRunId(newId);
+                        await _createRunRecord(newId);
+                      },
+                      icon: const Icon(
+                        Icons.play_arrow,
+                      ),
+                      label: const Text("URL作成"),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            url,
-                            style: const TextStyle(fontSize: 16),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    if (url.isNotEmpty) ...[
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.copy),
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: url));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text("URLをクリップボードにコピーしました")),
-                            );
-                          },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                url,
+                                style: const TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.copy),
+                              onPressed: () {
+                                Clipboard.setData(ClipboardData(text: url));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text("URLをクリップボードにコピーしました")),
+                                );
+                              },
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    ],
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await requestLocationPermission();
+                        await _updateRunStartTime();
+                        await _updateRoute();
+                        await BackgroundTask.instance.start();
+                      },
+                      icon: const Icon(
+                        Icons.play_arrow,
+                      ),
+                      label: const Text("ランニング開始"),
                     ),
-                  ),
-                ],
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    await requestLocationPermission();
-                    await _updateRunStartTime();
-                    await _updateRoute();
-                    await BackgroundTask.instance.start();
-                  },
-                  icon: const Icon(
-                    Icons.play_arrow,
-                  ),
-                  label: const Text("ランニング開始"),
+                    ElevatedButton.icon(
+                      onPressed: url.isNotEmpty
+                          ? () async {
+                              await _takePicture();
+                            }
+                          : null,
+                      icon: const Icon(
+                        Icons.camera,
+                      ),
+                      label: const Text("写真を撮る"),
+                    ),
+                  ],
                 ),
-                ElevatedButton.icon(
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton.icon(
                   onPressed: () async {
                     await _updateRunEndTime();
                     await BackgroundTask.instance.stop();
@@ -283,22 +303,9 @@ class _HomePageState extends State<HomePage> {
                   ),
                   label: const Text("ランニング終了"),
                 ),
-                ElevatedButton.icon(
-                  onPressed: url.isNotEmpty
-                      ? () async {
-                          await _takePicture();
-                        }
-                      : null,
-                  icon: const Icon(
-                    Icons.camera,
-                  ),
-                  label: const Text("写真を撮る"),
-                )
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
-    );
+          ]),
+        ));
   }
 }
