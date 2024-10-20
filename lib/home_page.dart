@@ -140,13 +140,27 @@ class _HomePageState extends State<HomePage> {
   Future<void> _updateRunEndTime() async {
     final runId = await _getRunId();
     if (runId != null) {
-      final run = await FirestoreHelper.instance.getRunData(runId);
-      if (run != null) {
-        run.endTime = DateTime.now();
-        run.status = 'completed';
-        await FirestoreHelper.instance.insertRun(run);
+      try {
+        await FirebaseFirestore.instance.runTransaction((transaction) async {
+          final runRef =
+              FirebaseFirestore.instance.collection("runs").doc(runId);
+          final runSnapshot = await transaction.get(runRef);
+
+          if (runSnapshot.exists) {
+            transaction.update(runRef, {
+              'endTime': DateTime.now(),
+              'status': 'completed',
+            });
+          }
+        });
+
+        // 正常終了時に runId を削除
+        await _removeRunId();
+      } catch (e) {
+        // エラーハンドリング
+        print('Error updating run end time: $e');
+        await Sentry.captureException(e);
       }
-      await _removeRunId();
     }
   }
 
